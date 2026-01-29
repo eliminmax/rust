@@ -618,6 +618,32 @@ pub unsafe fn from_boxed_utf8_unchecked(v: Box<[u8]>) -> Box<str> {
     unsafe { Box::from_raw(Box::into_raw(v) as *mut str) }
 }
 
+/// Converts a boxed slice of bytes to a boxed string slice, with unicode validation
+///
+/// # Examples
+///
+/// ```
+///# #![feature(str_from_box_checked)]
+/// let zombie_utf8 = Box::new([240, 159, 167, 159]);
+/// let zombie = std::str::from_boxed_utf8(zombie_utf8);
+/// assert_eq!(Ok("🧟"), zombie.as_deref());
+/// ```
+///
+/// ```
+///# #![feature(str_from_box_checked)]
+/// // invalid UTF-8 due to the missing bytes
+/// let partial_zombie = Box::new([240, 159]);
+/// let zombie = std::str::from_boxed_utf8(partial_zombie);
+/// assert!(zombie.is_err());
+/// ```
+#[unstable(feature = "str_from_box_checked", issue = "none")]
+#[must_use]
+pub fn from_boxed_utf8(v: Box<[u8]>) -> Result<Box<str>, Utf8Error> {
+    core::str::run_utf8_validation(&v)?;
+    // SAFETY: validation succeeded.
+    Ok(unsafe { from_boxed_utf8_unchecked(v) })
+}
+
 /// Converts leading ascii bytes in `s` by calling the `convert` function.
 ///
 /// For better average performance, this happens in chunks of `2*size_of::<usize>()`.
