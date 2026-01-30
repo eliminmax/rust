@@ -52,7 +52,7 @@ use core::{mem, ptr};
 use crate::borrow::ToOwned;
 use crate::boxed::Box;
 use crate::slice::{Concat, Join, SliceIndex};
-use crate::string::String;
+use crate::string::{FromUtf8Error, String};
 use crate::vec::Vec;
 
 /// Note: `str` in `Concat<str>` is not meaningful here.
@@ -638,8 +638,10 @@ pub unsafe fn from_boxed_utf8_unchecked(v: Box<[u8]>) -> Box<str> {
 /// ```
 #[unstable(feature = "str_from_box_checked", issue = "none")]
 #[must_use]
-pub fn from_boxed_utf8(v: Box<[u8]>) -> Result<Box<str>, Utf8Error> {
-    core::str::run_utf8_validation(&v)?;
+pub fn from_boxed_utf8(v: Box<[u8]>) -> Result<Box<str>, FromUtf8Error> {
+    if let Err(error) = core::str::run_utf8_validation(&v) {
+        return Err(FromUtf8Error { error, bytes: Vec::from(v) });
+    }
     // SAFETY: validation succeeded.
     Ok(unsafe { from_boxed_utf8_unchecked(v) })
 }

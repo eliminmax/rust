@@ -389,8 +389,8 @@ pub struct String {
 #[cfg_attr(not(no_global_oom_handling), derive(Clone))]
 #[derive(Debug, PartialEq, Eq)]
 pub struct FromUtf8Error {
-    bytes: Vec<u8>,
-    error: Utf8Error,
+    pub(crate) bytes: Vec<u8>,
+    pub(crate) error: Utf8Error,
 }
 
 /// A possible error value when converting a `String` from a UTF-16 byte slice.
